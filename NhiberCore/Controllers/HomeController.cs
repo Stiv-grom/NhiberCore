@@ -19,6 +19,11 @@ namespace NhiberCore.Controllers
 
         public async Task<IActionResult> Index()
         {
+
+            ViewData["Users"] = await _context.Users.Include("Room").ToListAsync();
+
+            ViewData["Rooms"] = await _context.Rooms.OrderBy(x => x.Number).ToListAsync();
+
             return View(await _context.Rooms.OrderBy(x => x.Number).ToListAsync());
         }
 

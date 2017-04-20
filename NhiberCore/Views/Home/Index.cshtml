@@ -1,6 +1,8 @@
 ﻿@model IEnumerable<NHiberCore.Core.Models.Room>
 @{
     ViewData["Title"] = "Home Page";
+    List<NHiberCore.Core.Models.Room> allRooms = ViewData["Rooms"] as List<NHiberCore.Core.Models.Room>;
+    List<NHiberCore.Core.Models.User> allUsers = ViewData["Users"] as List<NHiberCore.Core.Models.User>;
 }
 
 <div class="container">
@@ -27,7 +29,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
+                @foreach (var item in allRooms)
                 {
                     <tr>
                         <td>
@@ -45,11 +47,6 @@
                         <td>
                             @Html.DisplayFor(modelItem => item.HasPhone)
                         </td>
-                        @*<td>
-                            <a asp-action="Edit" asp-route-id="@item.Number">Edit</a> |
-                            <a asp-action="Details" asp-route-id="@item.Number">Details</a> |
-                            <a asp-action="Delete" asp-route-id="@item.Number">Delete</a>
-                        </td>*@
                     </tr>
                 }
             </tbody>
@@ -57,8 +54,8 @@
     </div>
 
     <div class="row">
-        <table class="table table-striped table-hover table-bordered" id="userTable" hidden>
-            <caption class="text-left" id="userTableCaption"></caption>  
+        <table class="table table-striped table-hover table-bordered" id="userTable">
+            <caption class="text-left" id="userTableCaption">All users</caption>  
             <thead>
                 <tr>
                     <th class="center">#</th>
@@ -69,7 +66,34 @@
                     <th class='col-md-1'></th>
                 </tr>
             </thead>
-            <tbody id="userInformation"></tbody>
+            <tbody id="userInformation">
+                @for (int i = 0; i < allUsers.Count(); i++)
+                {
+                    <tr>
+                        <td>
+                            @(i+1)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => allUsers[i].ID)
+                        </td>
+                        <td id="@string.Format("userFirstName{0}", i)" >
+                            @Html.DisplayFor(modelItem => allUsers[i].FirstName)
+                        </td>
+                        <td id="@string.Format("userLastName{0}", i)">
+                            @Html.DisplayFor(modelItem => allUsers[i].LastName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => allUsers[i].Room.Number)
+                        </td>
+                        <td>
+                            <button type='button' class='btn btn-default delete-button'>
+                                <span class='glyphicon glyphicon-remove' aria-hidden='true'></span>
+                            </button>
+                        </td>
+                    </tr>
+
+                }
+            </tbody>
         </table>
     </div>
 
@@ -85,8 +109,19 @@
             $(this).closest('tr').remove();
         });
 
+        //styles for x-editable fields
         $.fn.editable.defaults.mode = 'inline';
         $.fn.editable.defaults.showbuttons = false;
+        $.fn.editable.defaults.onblur = 'submit';
+
+        $(document).ready(function () {
+            var firstNames = $("td[id^='userFirstName']");
+            var lastNames = $("td[id^='userLastName']");
+            for (var i = 0; i < firstNames.length; i++) {
+                makeEditable(firstNames[i].id, $('#' + firstNames[i].id).prev().text().trim());
+                makeEditable(lastNames[i].id, $('#' + lastNames[i].id).prev().prev().text().trim());
+            }
+        });
         $("#roomTable tbody tr").on("click", function () {
             $(".success").removeClass('success')
             var currentRow = $(this);
