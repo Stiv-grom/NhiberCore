@@ -1,0 +1,154 @@
+﻿@model IEnumerable<NHiberCore.Core.Models.Room>
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container">
+    <div class="row">
+        <table class="table table-hover" id="roomTable">
+            <thead>
+                <tr>
+                    <th class="center">
+                        @Html.DisplayNameFor(model => model.Id)
+                    </th>
+                    <th class="center">
+                        @Html.DisplayNameFor(model => model.Number)
+                    </th>
+                    <th class="center">
+                        @Html.DisplayNameFor(model => model.Floor)
+                    </th>
+                    <th class="center">
+                        @Html.DisplayNameFor(model => model.HasTV)
+                    </th>
+                    <th class="center">
+                        @Html.DisplayNameFor(model => model.HasPhone)
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Id)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Number)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Floor)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.HasTV)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.HasPhone)
+                        </td>
+                        @*<td>
+                            <a asp-action="Edit" asp-route-id="@item.Number">Edit</a> |
+                            <a asp-action="Details" asp-route-id="@item.Number">Details</a> |
+                            <a asp-action="Delete" asp-route-id="@item.Number">Delete</a>
+                        </td>*@
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="row">
+        <table class="table table-striped table-hover table-bordered" id="userTable" hidden>
+            <caption class="text-left" id="userTableCaption"></caption>  
+            <thead>
+                <tr>
+                    <th class="center">#</th>
+                    <th class="center">ID</th>
+                    <th class="center">First Name</th>
+                    <th class="center">Last Name</th>
+                    <th class="center">Room</th>
+                    <th class='col-md-1'></th>
+                </tr>
+            </thead>
+            <tbody id="userInformation"></tbody>
+        </table>
+    </div>
+
+</div>
+
+@section scripts
+{
+    <script>
+        $(document).on('click', '.delete-button', function () { // <-- changes
+            alert("aa");
+            var userId = $(this).closest('tr').find("td:first-of-type").next().text().trim();
+            DeleteUser(userId);
+            $(this).closest('tr').remove();
+        });
+
+        $.fn.editable.defaults.mode = 'inline';
+        $.fn.editable.defaults.showbuttons = false;
+        $("#roomTable tbody tr").on("click", function () {
+            $(".success").removeClass('success')
+            var currentRow = $(this);
+            var roomN = $(this).find("td:first-of-type").text().trim();
+            var roomName = $(this).find("td:first-of-type").next().text().trim();
+            $.ajax({
+                type: "POST",
+                url: '/rooms',    //'@Url.Action("RoomDetails", "Home")',
+                data: {
+                    id: roomN
+                },
+                success: function (result) {
+                    var row = "";
+                    if (result.length > 0) {
+                        currentRow.addClass("success");
+                        $("#userTable").show();
+                        $("#userTableCaption").text('Room #' + roomName + ' inhabitants: ');
+                        $.each(result, function (index, item) {
+                            var currentElemId = 'userFirstName' + item.id;
+                            var currentElemLastNameId = 'userLastName' + item.id;
+                            row += "<tr><td>" + (index + 1) + "</td><td>" + item.id + "</td><td id='" + currentElemId + "'>" + item.firstName + "</td><td id='" + currentElemLastNameId + "'>"
+                                + item.lastName + "</td><td>" + item.number
+                                + "</td><td><button type='button' class='btn btn-default delete-button'><span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button></td></tr>";
+                        });
+                        $("#userInformation").html(row);
+                        $.each(result, function (index, item) {
+                            makeEditable('userFirstName' + item.id, item.id);
+                            makeEditable('userLastName' + item.id, item.id);
+                        });
+                        $('#username').editable();
+                    } else {
+                        $("#userTable").hide();
+                        alert('no users were found');
+                    }
+                },
+                error: function (xhr, response, errorThrown) {
+                    alert(response);
+                }
+            });
+        });
+        function makeEditable(element, id) {
+            $('#' + element).editable({
+                type: 'text',
+                pk: id,
+                url: '/Home/ChangeName'
+            });
+
+        }
+        function DeleteUser(userId) {
+            $.ajax({
+                type: "DELETE", 
+                url: '@Url.Action("DeleteUser", "Home")',
+                data: {
+                    id: userId
+                },
+                success: function (result) {
+                    alert('User was successfully removed');
+                },
+                error: function (xhr, response, errorThrown) {
+                    alert(response);
+                }
+            });
+        }
+    </script>
+}
