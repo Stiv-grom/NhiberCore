@@ -46,7 +46,7 @@ namespace NhiberCore.Controllers
             return View();
         }
 
-        [Route("rooms")]
+        //[Route("rooms")]
         public async Task<JsonResult> RoomDetails(int id)
         {
             //if (String.IsNullOrEmpty(roomNumber))

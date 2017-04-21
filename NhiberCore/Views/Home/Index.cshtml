@@ -127,6 +127,9 @@
             var currentRow = $(this);
             var roomN = $(this).find("td:first-of-type").text().trim();
             var roomName = $(this).find("td:first-of-type").next().text().trim();
+
+            ChangeUrl('rooms/', 'rooms/1');
+
             $.ajax({
                 type: "POST",
                 url: '/rooms',    //'@Url.Action("RoomDetails", "Home")',
@@ -151,7 +154,6 @@
                             makeEditable('userFirstName' + item.id, item.id);
                             makeEditable('userLastName' + item.id, item.id);
                         });
-                        $('#username').editable();
                     } else {
                         $("#userTable").hide();
                         alert('no users were found');
@@ -170,6 +172,25 @@
             });
 
         }
+        function ChangeUrl(page, url) {
+            if (typeof (history.pushState) != "undefined") {
+                var obj = { Page: page, Url: url };
+                history.pushState(obj, obj.Page, obj.Url);
+            } else {
+                alert("Browser does not support HTML5.");
+            }
+        }
+        $(function () {
+            $("#button1").click(function () {
+                ChangeUrl('Page1', 'Page1.htm');
+            });
+            $("#button2").click(function () {
+                ChangeUrl('Page2', 'Page2.htm');
+            });
+            $("#button3").click(function () {
+                ChangeUrl('Page3', 'Page3.htm');
+            });
+        });
         function DeleteUser(userId) {
             $.ajax({
                 type: "DELETE", 
