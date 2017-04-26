@@ -164,5 +164,20 @@ namespace NhiberCore.Controllers
 
             return View("RoomDetails", room);
         }
+
+        public async Task<IActionResult> SaveRoomChanges(int roomId, string roomNumber, string description)
+        {
+            var room = await _context.Rooms.FirstOrDefaultAsync(x => x.Id == roomId);
+
+            if (room != null)
+            {
+                room.Number = roomNumber;
+                room.Description = description;
+                await _context.SaveChangesAsync();
+                return Json("ok");
+            }
+
+            return Json("Room wasn't found");
+        }
     }
 }

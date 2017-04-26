@@ -14,6 +14,7 @@ namespace NHiberCore.Core.Models
         public int Floor { get; set; }
         public bool HasTV { get; set; }
         public bool HasPhone { get; set; }
+        public string Description { get; set; }
 
         public ICollection<User> Users { get; set; }
     }
