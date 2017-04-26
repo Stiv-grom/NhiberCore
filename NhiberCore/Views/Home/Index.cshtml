@@ -136,14 +136,15 @@
             }
 
         });
-        $("#roomTable tbody tr").on("click", function () {
-            $(".success").removeClass('success')
-            var currentRow = $(this);
-            var roomN = $(this).find("td:first-of-type").text().trim();
-            var roomName = $(this).find("td:first-of-type").next().text().trim();
-            $("#userTable").empty();
-            //ChangeUrl('rooms/', 'rooms/1');
-            window.location.href = "http://localhost:54014/rooms/" + roomN;
+        $("#roomTable tbody tr").on("click", function (e) {
+            if ($(e.toElement).attr('class') && $(e.toElement).attr('class').indexOf('arrow-right') == -1) {
+                $(".success").removeClass('success')
+                var currentRow = $(this);
+                var roomN = $(this).find("td:first-of-type").text().trim();
+                var roomName = $(this).find("td:first-of-type").next().text().trim();
+                $("#userTable").empty();
+                //ChangeUrl('rooms/', 'rooms/1');
+                window.location.href = location.origin + "/rooms/" + roomN;
 
             @*$.ajax({
                 type: "POST",
@@ -179,6 +180,7 @@
                     alert(response);
                 }
             });*@
+            }
         });
         function makeEditable(element, id) {
             $('#' + element).editable({
@@ -301,14 +303,7 @@
 <script>
 $(document).on('click', '.room-redirect-button', function () {
     var roomId = $(this).closest('tr').find("td:first-of-type").text().trim();
-    window.location.href = "details/" + roomId;
-    //$.ajax({
-    //    type: "GET",
-    //    url: "details/" + roomId,
-    //    error: function (xhr, response, errorThrown) {
-    //        alert(response);
-    //    }
-    //});
+    window.location.href = location.origin + "/details/" + roomId;
 });
 
 </script>

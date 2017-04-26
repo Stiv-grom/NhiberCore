@@ -56,12 +56,17 @@ namespace NhiberCore.Controllers
             //    .Where(x => x.Room.Id == id).Select(x => new { x.ID, x.FirstName, x.LastName, x.Room.Number }).ToListAsync();
 
             //return Json(user);
-
-            var users = await _context.Users
+            if (id == 0)
+            {
+                ViewData["Users"] = await _context.Users.Include("Room").Select(x => new UserGUI(x.ID, x.FirstName, x.LastName, x.Room.Number)).ToListAsync();
+            }
+            else
+            {
+                ViewData["Users"] = await _context.Users
                 .Include("Room")
-                .Where(x => x.Room.Id == id).Select(x => new UserGUI (x.ID, x.FirstName, x.LastName, x.Room.Number)).ToListAsync();
+                .Where(x => x.Room.Id == id).Select(x => new UserGUI(x.ID, x.FirstName, x.LastName, x.Room.Number)).ToListAsync();
+            }
 
-            ViewData["Users"] = users;
             ViewData["Rooms"] = allRooms;
             return View("Index");
             //return PartialView("UsersPartial", users);
@@ -175,6 +180,23 @@ namespace NhiberCore.Controllers
                 room.Description = description;
                 await _context.SaveChangesAsync();
                 return Json("ok");
+            }
+
+            return Json("Room wasn't found");
+        }
+
+        public async Task<JsonResult> DeleteRoom(int id)
+        {
+            id = id * 100;
+            var room = await _context.Rooms
+                .AsNoTracking()
+                .SingleOrDefaultAsync(m => m.Id == id);
+
+            if (room != null)
+            {
+                _context.Rooms.Remove(room);
+                await _context.SaveChangesAsync();
+                return Json("OK");
             }
 
             return Json("Room wasn't found");

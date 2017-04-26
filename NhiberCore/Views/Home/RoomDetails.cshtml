@@ -44,5 +44,26 @@
                 }
             });
         });
+
+        $("#deleteBtn").click(function () {
+            var roomIdValue = window.location.pathname.substr(window.location.pathname.lastIndexOf('/') + 1);
+            DeleteRoom(roomIdValue);
+        });
+        function DeleteRoom(roomId) {
+            $.ajax({
+                type: "DELETE",
+                url: '@Url.Action("DeleteRoom", "Home")',
+                data: {
+                    id: roomId
+                },
+                success: function (result) {
+                    alert('Room was successfully removed');
+                    window.location.href = location.origin + "/rooms/";
+                },
+                error: function (xhr, response, errorThrown) {
+                    alert(response);
+                }
+            });
+        }
     </script>   
 }
