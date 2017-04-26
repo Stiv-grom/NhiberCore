@@ -1,5 +1,27 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@model NHiberCore.Core.Models.Room
+
+<div class="row">
+    <label>Room Details</label>
+    <div class="form-group">
+        <label for="nameRoomFld">Name</label>
+        <input type="text" class="form-control" id="nameRoomFld" placeholder="Room name" value="@Model.Number">
+    </div>
+    <div class="form-group">
+        <label for="descriptionRoomFld">Description</label>
+        <input type="text" class="form-control" id="descriptionRoomFld" placeholder="Room description">
+    </div>
+    <div class="form-group row">
+        <button class="btn btn-primary" id="saveBtn">
+            <a asp-controller="Home" asp-action="Index">Save</a>
+        </button>
+        <a class="btn btn-primary" href="/" role="button" id="returnBtn">Go back</a>
+        <button class="btn btn-primary" id="deleteBtn">Delete room</button>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+
+    </script>   
 }

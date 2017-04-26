@@ -113,12 +113,6 @@
 
         $(document).ready(function () {
             $(".success").removeClass('success')
-            //var firstNames = $("td[id^='userFirstName']");
-            //var lastNames = $("td[id^='userLastName']");
-            //for (var i = 0; i < firstNames.length; i++) {
-            //    makeEditable(firstNames[i].id, $('#' + firstNames[i].id).prev().text().trim());
-            //    makeEditable(lastNames[i].id, $('#' + lastNames[i].id).prev().prev().text().trim());
-            //}
 
             var currentURL = window.location.href;
             if (currentURL.indexOf('rooms/') > 0)
@@ -302,5 +296,20 @@
                 }
             });
         }
+</script>
+
+<script>
+$(document).on('click', '.room-redirect-button', function () {
+    var roomId = $(this).closest('tr').find("td:first-of-type").text().trim();
+    window.location.href = "details/" + roomId;
+    //$.ajax({
+    //    type: "GET",
+    //    url: "details/" + roomId,
+    //    error: function (xhr, response, errorThrown) {
+    //        alert(response);
+    //    }
+    //});
+});
+
 </script>
 }

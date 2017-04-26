@@ -11,6 +11,7 @@
                 <th class="center">Floor</th>
                 <th class="center">TV</th>
                 <th class="center">Phone</th>
+                <th class="center"></th>
             </tr>
         </thead>
         <tbody>
@@ -31,6 +32,11 @@
                     </td>
                     <td>
                         @Html.DisplayFor(modelItem => item.HasPhone)
+                    </td>
+                    <td>
+                        <button type='button' class='btn btn-default room-redirect-button'>
+                            <span class='glyphicon glyphicon-arrow-right' aria-hidden='true'></span>
+                        </button>
                     </td>
                 </tr>
             }

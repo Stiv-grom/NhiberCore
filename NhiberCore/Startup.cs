@@ -62,6 +62,10 @@ namespace NhiberCore
                     template: "rooms/{id?}",
                     defaults: new { controller = "Home", action = "RoomDetails" });
                 routes.MapRoute(
+                    name: "roomDetials",
+                    template: "details/{id?}",
+                    defaults: new { controller = "Home", action = "RoomDetailsPage" });
+                routes.MapRoute(
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });

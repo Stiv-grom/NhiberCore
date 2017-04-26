@@ -158,5 +158,11 @@ namespace NhiberCore.Controllers
             return Json(users);
         }
 
+        public async Task<IActionResult> RoomDetailsPage(int id)
+        {
+            var room = await _context.Rooms.FirstOrDefaultAsync(x => x.Id == id);
+
+            return View("RoomDetails", room);
+        }
     }
 }
