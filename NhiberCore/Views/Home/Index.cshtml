@@ -1,61 +1,29 @@
-﻿@model IEnumerable<NHiberCore.Core.Models.Room>
+﻿@*@model IEnumerable<NHiberCore.Core.Models.Room>*@
 @{
     ViewData["Title"] = "Home Page";
     List<NHiberCore.Core.Models.Room> allRooms = ViewData["Rooms"] as List<NHiberCore.Core.Models.Room>;
-    List<NHiberCore.Core.Models.User> allUsers = ViewData["Users"] as List<NHiberCore.Core.Models.User>;
+    List<NHiberCore.Core.Models.UserGUI> allUsers = ViewData["Users"] as List<NHiberCore.Core.Models.UserGUI>;
 }
 
 <div class="container">
+    @Html.Partial("RoomsPartial", allRooms)
+    @*@Html.Partial("UsersPartial", allUsers)*@
+
     <div class="row">
-        <table class="table table-hover" id="roomTable">
-            <thead>
-                <tr>
-                    <th class="center">
-                        @Html.DisplayNameFor(model => model.Id)
-                    </th>
-                    <th class="center">
-                        @Html.DisplayNameFor(model => model.Number)
-                    </th>
-                    <th class="center">
-                        @Html.DisplayNameFor(model => model.Floor)
-                    </th>
-                    <th class="center">
-                        @Html.DisplayNameFor(model => model.HasTV)
-                    </th>
-                    <th class="center">
-                        @Html.DisplayNameFor(model => model.HasPhone)
-                    </th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in allRooms)
-                {
-                    <tr>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Id)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Number)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Floor)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.HasTV)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.HasPhone)
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <form class="form-inline" id="addUserForm" hidden>
+            <div class="form-group">
+                <label for="exampleInputPassword1">First Name</label>
+                <input type="text" class="form-control" id="firstNameTextFld" placeholder="John">
+                <label for="exampleInputPassword1">Last Name</label>
+                <input type="text" class="form-control" id="lastNameTextFld" placeholder="Johnson">
+            </div>
+            <button type="submit" class="btn btn-primary" id="addMemberBtn">Add member</button>
+        </form>
     </div>
 
     <div class="row">
-        <table class="table table-striped table-hover table-bordered" id="userTable">
-            <caption class="text-left" id="userTableCaption">All users</caption>  
+        <table class="table table-striped table-hover table-bordered" id="table_id">
+            <caption class="text-left" id="userTableCaption">All users</caption>
             <thead>
                 <tr>
                     <th class="center">#</th>
@@ -66,48 +34,77 @@
                     <th class='col-md-1'></th>
                 </tr>
             </thead>
-            <tbody id="userInformation">
-                @for (int i = 0; i < allUsers.Count(); i++)
-                {
-                    <tr>
-                        <td>
-                            @(i+1)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => allUsers[i].ID)
-                        </td>
-                        <td id="@string.Format("userFirstName{0}", i)" >
-                            @Html.DisplayFor(modelItem => allUsers[i].FirstName)
-                        </td>
-                        <td id="@string.Format("userLastName{0}", i)">
-                            @Html.DisplayFor(modelItem => allUsers[i].LastName)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => allUsers[i].Room.Number)
-                        </td>
-                        <td>
-                            <button type='button' class='btn btn-default delete-button'>
-                                <span class='glyphicon glyphicon-remove' aria-hidden='true'></span>
-                            </button>
-                        </td>
-                    </tr>
-
-                }
-            </tbody>
+            <tbody id="table_id_body"></tbody>
         </table>
     </div>
-
 </div>
-
 @section scripts
 {
     <script>
+        var isRoomsPage = window.location.href.indexOf('rooms') > -1;
         $(document).on('click', '.delete-button', function () { // <-- changes
-            alert("aa");
             var userId = $(this).closest('tr').find("td:first-of-type").next().text().trim();
             DeleteUser(userId);
             $(this).closest('tr').remove();
         });
+
+        //initialize datatables
+
+        //select api depending on url
+        var urlAPI = isRoomsPage ? "/Home/RoomUsers" : "/Home/Users";
+        var urlData = window.isRoomsPage ? window.location.pathname.substr(window.location.pathname.lastIndexOf('/') + 1) : null;
+
+        $.ajax({
+            type: "GET",
+            url: urlAPI,
+            data: urlData ? { id: urlData } : null,
+            success: function (result) {
+                for (var i = 0; i < result.length; i++) {
+                    result[i].index = 0;
+                    result[i].DT_RowId = "row_" + (i + 1);
+                };
+                var table = $('#table_id').DataTable({
+                    "createdRow": function (row, data, index) {
+                        $('td', row).eq(2).attr('id', 'userFirstName-' + index + '-1');
+                        $('td', row).eq(3).attr('id', 'userLastName-' + index + '-1');
+                    },
+                    data: result,
+                    columns: [
+                        { data: 'index' },
+                        { data: 'id' },
+                        { data: 'firstName' },
+                        { data: 'lastName' },
+                        { data: 'number' },
+                        {
+                            data: null,
+                            className: "center",
+                            defaultContent: "<button type='button' class='btn btn-default delete-button'><span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button>"
+                        }
+                    ],
+                    "order": [[1, 'asc']],
+                    "pageLength": 50
+                });
+                table.on('order.dt search.dt', function () {
+                    table.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
+                        cell.innerHTML = i + 1;
+                    });
+                }).draw();
+
+                var firstNames = $("td[id^='userFirstName']");
+                var lastNames = $("td[id^='userLastName']");
+                for (var i = 0; i < firstNames.length; i++) {
+                    makeEditable(firstNames[i].id, $('#' + firstNames[i].id).prev().text().trim());
+                    makeEditable(lastNames[i].id, $('#' + lastNames[i].id).prev().prev().text().trim());
+                }
+
+                var captionText = urlData ? $(".success").children().first().next().text().trim() : 'All users';
+                $('#userTableCaption').text(captionText);
+            },
+            error: function (xhr, response, errorThrown) {
+                alert(response);
+            }
+        });
+
 
         //styles for x-editable fields
         $.fn.editable.defaults.mode = 'inline';
@@ -115,54 +112,79 @@
         $.fn.editable.defaults.onblur = 'submit';
 
         $(document).ready(function () {
-            var firstNames = $("td[id^='userFirstName']");
-            var lastNames = $("td[id^='userLastName']");
-            for (var i = 0; i < firstNames.length; i++) {
-                makeEditable(firstNames[i].id, $('#' + firstNames[i].id).prev().text().trim());
-                makeEditable(lastNames[i].id, $('#' + lastNames[i].id).prev().prev().text().trim());
+            $(".success").removeClass('success')
+            //var firstNames = $("td[id^='userFirstName']");
+            //var lastNames = $("td[id^='userLastName']");
+            //for (var i = 0; i < firstNames.length; i++) {
+            //    makeEditable(firstNames[i].id, $('#' + firstNames[i].id).prev().text().trim());
+            //    makeEditable(lastNames[i].id, $('#' + lastNames[i].id).prev().prev().text().trim());
+            //}
+
+            var currentURL = window.location.href;
+            if (currentURL.indexOf('rooms/') > 0)
+            {
+                var roomId = window.location.pathname.substr(window.location.pathname.lastIndexOf('/') + 1);
+                var roomCell = $("#roomTable td:first-child").filter(function () {
+                    return $(this).text().trim() === roomId;
+                })
+                roomCell.parent().addClass("success");
             }
+
+
+            $("#addMemberBtn").submit(function (e) {
+                e.preventDefault();
+            });
+
+            if (isRoomsPage) { // show add user form or not
+                $('#addUserForm').show();
+            } else {
+                $('#addUserForm').hide();
+            }
+
         });
         $("#roomTable tbody tr").on("click", function () {
             $(".success").removeClass('success')
             var currentRow = $(this);
             var roomN = $(this).find("td:first-of-type").text().trim();
             var roomName = $(this).find("td:first-of-type").next().text().trim();
+            $("#userTable").empty();
+            //ChangeUrl('rooms/', 'rooms/1');
+            window.location.href = "http://localhost:54014/rooms/" + roomN;
 
-            ChangeUrl('rooms/', 'rooms/1');
-
-            $.ajax({
+            @*$.ajax({
                 type: "POST",
-                url: '/rooms',    //'@Url.Action("RoomDetails", "Home")',
+                url: '/Home/RoomDetails',    //'@Url.Action("RoomDetails", "Home")',
                 data: {
                     id: roomN
                 },
                 success: function (result) {
                     var row = "";
-                    if (result.length > 0) {
-                        currentRow.addClass("success");
-                        $("#userTable").show();
-                        $("#userTableCaption").text('Room #' + roomName + ' inhabitants: ');
-                        $.each(result, function (index, item) {
-                            var currentElemId = 'userFirstName' + item.id;
-                            var currentElemLastNameId = 'userLastName' + item.id;
-                            row += "<tr><td>" + (index + 1) + "</td><td>" + item.id + "</td><td id='" + currentElemId + "'>" + item.firstName + "</td><td id='" + currentElemLastNameId + "'>"
-                                + item.lastName + "</td><td>" + item.number
-                                + "</td><td><button type='button' class='btn btn-default delete-button'><span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button></td></tr>";
-                        });
-                        $("#userInformation").html(row);
-                        $.each(result, function (index, item) {
-                            makeEditable('userFirstName' + item.id, item.id);
-                            makeEditable('userLastName' + item.id, item.id);
-                        });
-                    } else {
-                        $("#userTable").hide();
-                        alert('no users were found');
-                    }
+                    //if (result.length > 0) {
+                    //    //$("#userTable").html(result);
+                    //    currentRow.addClass("success");
+                    //    $("#userTable").show();
+                    //    $("#userTableCaption").text('Room #' + roomName + ' inhabitants: ');
+                    //    $.each(result, function (index, item) {
+                    //        var currentElemId = 'userFirstName' + item.id;
+                    //        var currentElemLastNameId = 'userLastName' + item.id;
+                    //        row += "<tr><td>" + (index + 1) + "</td><td>" + item.id + "</td><td id='" + currentElemId + "'>" + item.firstName + "</td><td id='" + currentElemLastNameId + "'>"
+                    //            + item.lastName + "</td><td>" + item.number
+                    //            + "</td><td><button type='button' class='btn btn-default delete-button'><span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button></td></tr>";
+                    //    });
+                    //    $("#userInformation").html(row);
+                    //    $.each(result, function (index, item) {
+                    //        makeEditable('userFirstName' + item.id, item.id);
+                    //        makeEditable('userLastName' + item.id, item.id);
+                    //    });
+                    //} else {
+                    //    $("#userTable").hide();
+                    //    alert('no users were found');
+                    //}
                 },
                 error: function (xhr, response, errorThrown) {
                     alert(response);
                 }
-            });
+            });*@
         });
         function makeEditable(element, id) {
             $('#' + element).editable({
@@ -170,8 +192,16 @@
                 pk: id,
                 url: '/Home/ChangeName'
             });
-
         }
+
+        function makeEditableInDataTable(element, id) {
+            $('#' + element).editable({
+                type: 'text',
+                pk: id,
+                url: '/Home/ChangeName'
+            });
+        }
+
         function ChangeUrl(page, url) {
             if (typeof (history.pushState) != "undefined") {
                 var obj = { Page: page, Url: url };
@@ -180,20 +210,9 @@
                 alert("Browser does not support HTML5.");
             }
         }
-        $(function () {
-            $("#button1").click(function () {
-                ChangeUrl('Page1', 'Page1.htm');
-            });
-            $("#button2").click(function () {
-                ChangeUrl('Page2', 'Page2.htm');
-            });
-            $("#button3").click(function () {
-                ChangeUrl('Page3', 'Page3.htm');
-            });
-        });
         function DeleteUser(userId) {
             $.ajax({
-                type: "DELETE", 
+                type: "DELETE",
                 url: '@Url.Action("DeleteUser", "Home")',
                 data: {
                     id: userId
@@ -207,4 +226,81 @@
             });
         }
     </script>
+
+<script>
+        $("#addMemberBtn").click(function () {
+            firstNameTxt = $('#firstNameTextFld').val();
+            lastNameTxt = $('#lastNameTextFld').val();
+            currentRoom = $('#userTableCaption').text();
+            //AddUser(firstNameTxt, lastNameTxt, currentRoom);
+            AddUserDataTable(firstNameTxt, lastNameTxt, currentRoom);
+        });
+
+        function AddUser(firstNameTxt, lastNameTxt, currentRoom) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("AddUser", "Home")',
+                data: {
+                    firstName: firstNameTxt,
+                    lastName: lastNameTxt,
+                    roomNumber: currentRoom
+                },
+                success: function (result) {
+                    AddTableRow(result);
+                    ClearForm();
+                },
+                error: function (xhr, response, errorThrown) {
+                    alert(response);
+                }
+            });
+        }
+
+        function AddTableRow(newUser) {
+            var lastRow = $('#userInformation tr').last();
+            $(lastRow).clone().insertAfter(lastRow);
+            lastRow = $('#userInformation tr').last(); // new last
+            var firstNameField = lastRow.find("td[id^='userFirst']");
+            firstNameField.text(newUser.firstName);
+            var lastNameField = lastRow.find("td[id^='userLast']");
+            lastNameField.text(newUser.lastName);
+            var numberField = lastRow.find("td[id^='userLast']").next();
+            numberField.text(newUser.number);
+            var iterativeNumber = lastRow.find("td[id^='userFirst']").prev();
+            iterativeNumber.text(parseInt(lastRow.find("td[id^='userFirst']").prev().text(), 10) + 1);
+        }
+
+        function ClearForm() {
+            $('#firstNameTextFld').val('');
+            $('#lastNameTextFld').val('');
+        }
+
+
+        function AddUserDataTable(firstNameTxt, lastNameTxt, currentRoom) {
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("AddUser", "Home")',
+                data: {
+                    firstName: firstNameTxt,
+                    lastName: lastNameTxt,
+                    roomNumber: currentRoom
+                },
+                success: function (result) {
+                    var table = $('#table_id').DataTable();
+                    table.row.add({
+                        "index": table.data().count() + 1,
+                        "id": result.id,
+                        "firstName": result.firstName,
+                        "lastName": result.lastName,
+                        "number": result.number
+                    }).draw();
+
+                    ClearForm();
+                },
+                error: function (xhr, response, errorThrown) {
+                    alert(response);
+                }
+            });
+        }
+</script>
 }

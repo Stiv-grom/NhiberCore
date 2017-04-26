@@ -5,25 +5,27 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NHiberCore.Core.Data;
 using Microsoft.EntityFrameworkCore;
+using NHiberCore.Core.Models;
 
 namespace NhiberCore.Controllers
 {
     public class HomeController : Controller
     {
         private readonly BookingContext _context;
+        private List<Room> allRooms;
 
         public HomeController(BookingContext context)
         {
             _context = context;
+            allRooms = _context.Rooms.OrderBy(x => x.Number).ToList();
         }
 
         public async Task<IActionResult> Index()
         {
 
-            ViewData["Users"] = await _context.Users.Include("Room").ToListAsync();
+            ViewData["Users"] = await _context.Users.Include("Room").Select(x => new UserGUI(x.ID, x.FirstName, x.LastName, x.Room.Number)).ToListAsync();
 
-            ViewData["Rooms"] = await _context.Rooms.OrderBy(x => x.Number).ToListAsync();
-
+            ViewData["Rooms"] = allRooms;
             return View(await _context.Rooms.OrderBy(x => x.Number).ToListAsync());
         }
 
@@ -47,17 +49,22 @@ namespace NhiberCore.Controllers
         }
 
         //[Route("rooms")]
-        public async Task<JsonResult> RoomDetails(int id)
+        public async Task<IActionResult> RoomDetails(int id)
         {
-            //if (String.IsNullOrEmpty(roomNumber))
-            //{
-            //    return NotFound();
-            //}
+            //var user = await _context.Users
+            //    .Include("Room")
+            //    .Where(x => x.Room.Id == id).Select(x => new { x.ID, x.FirstName, x.LastName, x.Room.Number }).ToListAsync();
 
-            var user = await _context.Users
+            //return Json(user);
+
+            var users = await _context.Users
                 .Include("Room")
-                .Where(x => x.Room.Id == id).Select(x => new { x.ID, x.FirstName, x.LastName, x.Room.Number }).ToListAsync();
-            return Json(user);
+                .Where(x => x.Room.Id == id).Select(x => new UserGUI (x.ID, x.FirstName, x.LastName, x.Room.Number)).ToListAsync();
+
+            ViewData["Users"] = users;
+            ViewData["Rooms"] = allRooms;
+            return View("Index");
+            //return PartialView("UsersPartial", users);
         }
 
         public async Task<JsonResult> ChangeName(string name, int pk, string value)
@@ -90,7 +97,7 @@ namespace NhiberCore.Controllers
 
         public async Task<JsonResult> DeleteUser(int id)
         {
-            id = id * 100;
+            //id = id * 100;
             var user = await _context.Users
                 .AsNoTracking()
                 .SingleOrDefaultAsync(m => m.ID == id);
@@ -104,5 +111,52 @@ namespace NhiberCore.Controllers
 
             return Json("User not found");
         }
+
+        public async Task<JsonResult> AddUser(string firstName, string lastName, string roomNumber)
+        {
+
+            var user = await _context.Users
+                .AsNoTracking()
+                .SingleOrDefaultAsync(m => m.FirstName == firstName && m.LastName == lastName && m.Room.Number == roomNumber);
+
+            if (user == null)
+            {
+                var userRoom = await _context.Rooms.AsNoTracking().SingleOrDefaultAsync(m => m.Number == roomNumber);
+
+                if (userRoom != null)
+                {
+                    var newUser = new User { FirstName = firstName, LastName = lastName, Room = userRoom };
+
+                    _context.Users.Add(newUser);
+                    await _context.SaveChangesAsync();
+                    return Json(new UserGUI(0, newUser.FirstName, newUser.LastName, newUser.Room.Number));
+                }
+                else
+                {
+                    return Json("Room is not found");
+                }
+            }
+
+            return Json("User duplicate");
+        }
+        public async Task<JsonResult> Users()
+        {
+
+            var users = await _context.Users
+                .Include("Room")
+                .Select(x => new UserGUI(x.ID, x.FirstName, x.LastName, x.Room.Number)).ToListAsync();
+
+            return Json(users);
+        }
+
+        public async Task<IActionResult> RoomUsers(int id)
+        {
+            var users = await _context.Users
+                .Include("Room")
+                .Where(x => x.Room.Id == id).Select(x => new UserGUI(x.ID, x.FirstName, x.LastName, x.Room.Number)).ToListAsync();
+
+            return Json(users);
+        }
+
     }
 }

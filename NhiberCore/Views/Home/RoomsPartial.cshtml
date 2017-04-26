@@ -1,0 +1,39 @@
+﻿@model List<NHiberCore.Core.Models.Room>
+@{
+    List<NHiberCore.Core.Models.Room> allRooms = ViewData["Rooms"] as List<NHiberCore.Core.Models.Room>;
+}
+<div class="row">
+    <table class="table table-hover" id="roomTable">
+        <thead>
+            <tr>
+                <th class="center">ID</th>
+                <th class="center">Room Number</th>
+                <th class="center">Floor</th>
+                <th class="center">TV</th>
+                <th class="center">Phone</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in allRooms)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Id)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Number)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Floor)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.HasTV)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.HasPhone)
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
